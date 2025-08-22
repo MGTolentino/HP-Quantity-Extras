@@ -85,6 +85,17 @@ function hp_quantity_extras_enqueue_scripts() {
             ]
         );
     }
+    
+    // Agregar script para fix de repeaters en admin/listing forms
+    if (is_admin() || is_page() || is_singular('hp_listing')) {
+        wp_enqueue_script(
+            'hp-quantity-extras-repeater-fix',
+            HP_QUANTITY_EXTRAS_URL . 'repeater-fix.js',
+            ['jquery'],
+            HP_QUANTITY_EXTRAS_VERSION,
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'hp_quantity_extras_enqueue_scripts');
 
