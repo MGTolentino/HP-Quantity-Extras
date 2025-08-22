@@ -69,7 +69,7 @@ function hp_quantity_extras_enqueue_scripts() {
     if (is_singular('hp_listing')) {
         wp_enqueue_script(
             'hp-quantity-extras-validation',
-            HP_QUANTITY_EXTRAS_URL . 'assets/js/booking-validation.js',
+            HP_QUANTITY_EXTRAS_URL . 'booking-validation.js',
             ['jquery'],
             HP_QUANTITY_EXTRAS_VERSION,
             true
