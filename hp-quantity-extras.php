@@ -88,22 +88,29 @@ function hp_quantity_extras_enqueue_scripts() {
     
     // Agregar script para fix de repeaters en admin/listing forms
     if (is_admin() || is_page() || is_singular('hp_listing')) {
-        // Cargar el manejador de errores ANTES que otros scripts
-        wp_enqueue_script(
-            'hp-quantity-extras-error-handler',
-            HP_QUANTITY_EXTRAS_URL . 'hivepress-error-handler.js',
-            ['jquery'],
-            HP_QUANTITY_EXTRAS_VERSION,
-            false // Cargar en el head para que se ejecute primero
-        );
-        
         wp_enqueue_script(
             'hp-quantity-extras-repeater-fix',
             HP_QUANTITY_EXTRAS_URL . 'repeater-fix.js',
-            ['jquery', 'hp-quantity-extras-error-handler'],
-            HP_QUANTITY_EXTRAS_VERSION,
-            true
+            ['jquery', 'hivepress-core-frontend'], // Asegurar que se carga después de HivePress
+            HP_QUANTITY_EXTRAS_VERSION . '.1', // Incrementar versión para forzar recarga
+            true // Cargar en el footer
         );
+        
+        // Añadir prioridad alta para asegurar que se ejecute después de otros scripts
+        add_action('wp_print_footer_scripts', function() {
+            ?>
+            <script>
+            jQuery(document).ready(function($) {
+                // Forzar re-inicialización después de que todos los scripts se hayan cargado
+                setTimeout(function() {
+                    if (typeof window.fixRepeaterHandler === 'function') {
+                        window.fixRepeaterHandler();
+                    }
+                }, 1500);
+            });
+            </script>
+            <?php
+        }, 999);
     }
 }
 add_action('wp_enqueue_scripts', 'hp_quantity_extras_enqueue_scripts');
