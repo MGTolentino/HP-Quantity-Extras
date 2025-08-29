@@ -7,17 +7,25 @@
         
         // Función para asegurar que variable_quantity esté disponible en todos los selects
         function ensureVariableQuantityOption() {
-            // Buscar todos los selects de tipo en los repeaters
-            $('[data-component="repeater"] select[name*="[type]"]').each(function() {
-                var $select = $(this);
+            // Buscar SOLO los selects de price_extras, no todos los repeaters
+            $('[data-component="repeater"]').each(function() {
+                var $repeater = $(this);
+                var $firstRow = $repeater.find('tbody tr:first');
                 
-                // Si no tiene la opción variable_quantity, agregarla
-                if ($select.find('option[value="variable_quantity"]').length === 0) {
-                    $select.append('<option value="variable_quantity">Variable Quantity</option>');
+                // Solo procesar si es un repeater de price_extras
+                if ($firstRow.find('input[name*="price_extras"], select[name*="price_extras"], textarea[name*="price_extras"]').length > 0) {
+                    $repeater.find('select[name*="[type]"]').each(function() {
+                        var $select = $(this);
+                        
+                        // Si no tiene la opción variable_quantity, agregarla
+                        if ($select.find('option[value="variable_quantity"]').length === 0) {
+                            $select.append('<option value="variable_quantity">Variable Quantity</option>');
+                        }
+                        
+                        // Asegurar que el select esté habilitado
+                        $select.prop('disabled', false).removeClass('disabled');
+                    });
                 }
-                
-                // Asegurar que el select esté habilitado
-                $select.prop('disabled', false).removeClass('disabled');
             });
         }
 
@@ -40,13 +48,23 @@
                 isProcessingClick = true;
                 
                 var $button = $(this);
+                // IMPORTANTE: Usar el repeater específico donde se hizo click
                 var $repeater = $button.closest('[data-component="repeater"]');
                 var $tbody = $repeater.find('tbody');
                 var $firstRow = $tbody.find('tr:first');
                 
+                // Verificar si este repeater es de price_extras
+                var isExtraRepeater = $firstRow.find('input[name*="price_extras"], select[name*="price_extras"], textarea[name*="price_extras"]').length > 0;
+                
                 if (!$firstRow.length) {
                     isProcessingClick = false;
                     return false;
+                }
+                
+                // Si NO es un repeater de price_extras, dejar que otros scripts lo manejen
+                if (!isExtraRepeater) {
+                    isProcessingClick = false;
+                    return true; // Permitir que el evento continúe
                 }
                 
                 try {
@@ -197,16 +215,23 @@
                                 
                                 // Si es una nueva fila de repeater
                                 if ($node.is('tr') && $node.closest('[data-component="repeater"]').length) {
-                                    // Asegurar que los selects tengan todas las opciones
-                                    setTimeout(function() {
-                                        $node.find('select[name*="[type]"]').each(function() {
-                                            var $select = $(this);
-                                            if ($select.find('option[value="variable_quantity"]').length === 0) {
-                                                $select.append('<option value="variable_quantity">Variable Quantity</option>');
-                                            }
-                                            $select.prop('disabled', false).removeClass('disabled');
-                                        });
-                                    }, 100);
+                                    // Solo procesar si es de price_extras
+                                    var $repeater = $node.closest('[data-component="repeater"]');
+                                    var $firstRowInRepeater = $repeater.find('tbody tr:first');
+                                    var isExtraRow = $firstRowInRepeater.find('input[name*="price_extras"], select[name*="price_extras"], textarea[name*="price_extras"]').length > 0;
+                                    
+                                    if (isExtraRow) {
+                                        // Asegurar que los selects tengan todas las opciones
+                                        setTimeout(function() {
+                                            $node.find('select[name*="[type]"]').each(function() {
+                                                var $select = $(this);
+                                                if ($select.find('option[value="variable_quantity"]').length === 0) {
+                                                    $select.append('<option value="variable_quantity">Variable Quantity</option>');
+                                                }
+                                                $select.prop('disabled', false).removeClass('disabled');
+                                            });
+                                        }, 100);
+                                    }
                                 }
                             }
                         });
@@ -254,6 +279,9 @@
                 ensureVariableQuantityOption();
             }, 500);
         });
+        
+        // Log para debugging
+        console.log('HP Quantity Extras - Repeater Fix loaded and initialized');
     });
 
 })(jQuery);
