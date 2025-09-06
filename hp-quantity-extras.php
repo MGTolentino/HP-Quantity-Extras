@@ -25,6 +25,13 @@ add_filter(
     }
 );
 
+// Initialize Booking Quantity Fix component
+add_action('hivepress/v1/activate', function() {
+    if (hivepress()->get_version('bookings') && hivepress()->get_version('marketplace')) {
+        new \HivePress\Components\Booking_Quantity_Fix();
+    }
+}, 100);
+
 // Modify booking make form
 add_filter(
     'hivepress/v1/forms/booking_make',
