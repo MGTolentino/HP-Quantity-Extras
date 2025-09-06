@@ -65,25 +65,32 @@ final class Booking_Quantity_Fix extends Component {
             return $cart;
         }
         
-        // ENFOQUE TEMPORAL: Solo hacer logging para entender el problema real
-        if (isset($cart['meta']['quantity']) || isset($cart['args']['_quantity'])) {
+        // DETECCIÓN Y FIX ESPECÍFICO DEL PROBLEMA:
+        // Solo intervenir cuando hp_quantity = 1 (donde ocurre la duplicación)
+        if (isset($cart['meta']['quantity'])) {
             
-            $hp_quantity = hp\get_array_value($cart['meta'], 'quantity', 'no definido');
-            $args_quantity = hp\get_array_value($cart['args'], '_quantity', 'no definido');
+            $hp_quantity = $cart['meta']['quantity'];
+            $args_quantity = hp\get_array_value($cart['args'], '_quantity', 1);
             
-            // Log detallado para debug
+            // Log para debug (comentar en producción)
             if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
-                error_log('=== HP Quantity Fix Debug ===');
-                error_log('Booking ID: ' . hp\get_array_value($cart['meta'], 'booking', 'no definido'));
-                error_log('hp_quantity (meta): ' . $hp_quantity);
-                error_log('_quantity (args): ' . $args_quantity);
-                error_log('Todos los meta: ' . print_r($cart['meta'], true));
-                error_log('Todos los args: ' . print_r($cart['args'], true));
-                error_log('=============================');
+                error_log('HP Quantity Fix - hp_quantity: ' . $hp_quantity . ', _quantity original: ' . $args_quantity);
             }
             
-            // POR AHORA: No modificamos nada, solo observamos
-            // Una vez que veamos los logs, sabremos exactamente dónde aplicar el fix
+            // FIX ESPECÍFICO: Solo cuando hp_quantity = 1
+            if ($hp_quantity == 1) {
+                // Forzar _quantity = 1 para evitar la duplicación 1→2
+                $cart['args']['_quantity'] = 1;
+                
+                if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+                    error_log('HP Quantity Fix - APLICADO: hp_quantity=1, forzando _quantity=1');
+                }
+            } else {
+                // Para cualquier otro valor, dejar el proceso normal
+                if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+                    error_log('HP Quantity Fix - NO APLICADO: hp_quantity=' . $hp_quantity . ', manteniendo proceso normal');
+                }
+            }
         }
         
         return $cart;
