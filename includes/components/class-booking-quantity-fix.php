@@ -65,28 +65,25 @@ final class Booking_Quantity_Fix extends Component {
             return $cart;
         }
         
-        // DETECCIÓN DEL PROBLEMA:
-        // Si existe hp_quantity (lugares/places) en los metadatos
-        if (isset($cart['meta']['quantity']) && $cart['meta']['quantity'] > 0) {
+        // ENFOQUE TEMPORAL: Solo hacer logging para entender el problema real
+        if (isset($cart['meta']['quantity']) || isset($cart['args']['_quantity'])) {
             
-            // Log para debug (comentar en producción)
+            $hp_quantity = hp\get_array_value($cart['meta'], 'quantity', 'no definido');
+            $args_quantity = hp\get_array_value($cart['args'], '_quantity', 'no definido');
+            
+            // Log detallado para debug
             if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
-                error_log('HP Quantity Fix - Detectado booking con hp_quantity: ' . $cart['meta']['quantity']);
-                error_log('HP Quantity Fix - _quantity original: ' . hp\get_array_value($cart['args'], '_quantity', 'no definido'));
+                error_log('=== HP Quantity Fix Debug ===');
+                error_log('Booking ID: ' . hp\get_array_value($cart['meta'], 'booking', 'no definido'));
+                error_log('hp_quantity (meta): ' . $hp_quantity);
+                error_log('_quantity (args): ' . $args_quantity);
+                error_log('Todos los meta: ' . print_r($cart['meta'], true));
+                error_log('Todos los args: ' . print_r($cart['args'], true));
+                error_log('=============================');
             }
             
-            // SOLUCIÓN 1: Forzar _quantity a 1
-            // Esto evita que Marketplace use el valor de días/slots como cantidad del producto
-            $cart['args']['_quantity'] = 1;
-            
-            // SOLUCIÓN ALTERNATIVA (descomentar si la anterior no funciona):
-            // Eliminar completamente _quantity para que Marketplace use el default (1)
-            // unset($cart['args']['_quantity']);
-            
-            // Log resultado (comentar en producción)
-            if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
-                error_log('HP Quantity Fix - _quantity ajustado a: 1');
-            }
+            // POR AHORA: No modificamos nada, solo observamos
+            // Una vez que veamos los logs, sabremos exactamente dónde aplicar el fix
         }
         
         return $cart;
